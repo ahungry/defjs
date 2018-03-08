@@ -161,20 +161,30 @@ out at the client."
 (defun react-js ()
   (ps
     (defvar rc (@ -react -component))
-    (class-extends greeting rc)
-    (setf (@ greeting prototype render)
-          (lambda () "" "React is working, yay."))
-    ;; (defvar Greeting
-    ;;   (chain -react
-    ;;          (create-class
-    ;;           (create
-    ;;            render (lambda ()
-    ;;                     (chain -react (create-element "div" nil "Hello, Universe")))))))
+    (class-extends Greeting rc)
+    (setf (@ Greeting prototype render)
+          (lambda ()
+            (chain -react
+                   (create-element
+                    "div"               ; tag
+                    (create
+                     class-name "greeting"
+                     on-click (lambda ()
+                                (alert 4))) ; properties
+                    (+ "Hello " (@ this props name))))))    ; inner content
 
-    (chain -react-d-o-m (render
-                   (chain -react (create-element Greeting (create) nil))
-                   (chain document (get-element-by-id "react-stuff"))
-                   ))
+    (chain -react-d-o-m
+           (render
+            (chain -react
+                   (create-element
+                    Greeting
+                    (create
+                     name "User"
+                     class-name "root"
+                     on-click (lambda () (alert 3)))
+                    nil))
+            (chain document (get-element-by-id "react-stuff"))
+            ))
     ))
 
 (defun page-js ()

@@ -179,7 +179,7 @@ out at the client."
         (λλ α → (progn
                   (c "Got something from socket")
                   (c α)
-                  (eval (+ (@ α code))))))
+                  (c (eval (@ α code))))))
 
     (set-timeout (λλ α → (defjs-socket-start)) 1000)
 

@@ -131,8 +131,8 @@ out at the client."
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defmacro+ps class-extends (child parent)
     `(progn
-       (defun ,child ()
-         (chain this super (call this))
+       (defun ,child (props state)
+         (chain this super (call this props state))
          )
        (setf (@ ,child prototype)
              (chain -Object (create (@ ,parent prototype))))
@@ -162,16 +162,22 @@ out at the client."
   (ps
     (defvar rc (@ -react -component))
     (class-extends Greeting rc)
+    (setf (@ Greeting prototype state)
+          (create click-count 0))
     (setf (@ Greeting prototype render)
           (lambda ()
-            (chain -react
-                   (create-element
-                    "div"               ; tag
-                    (create
-                     class-name "greeting"
-                     on-click (lambda ()
-                                (alert 4))) ; properties
-                    (+ "Hello " (@ this props name))))))    ; inner content
+            (let* ((self this)
+                  (click-count (1+ (@ self state click-count))))
+              (chain -react
+                     (create-element
+                      "div"             ; tag
+                      (create
+                       class-name "greeting"
+                       on-click (lambda ()
+                                  (chain self (set-state (create click-count click-count)))
+                                  ))          ; properties
+                      (+ "Hello " (@ this props name) " - clicked - "
+                         click-count))))))    ; inner content
 
     (chain -react-d-o-m
            (render

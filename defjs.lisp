@@ -129,8 +129,53 @@ out at the client."
     json-string))
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
+  (defmacro+ps class-extends (child parent)
+    `(progn
+       (defun ,child ()
+         (chain this super (call this))
+         )
+       (setf (@ ,child prototype)
+             (chain -Object (create (@ ,parent prototype))))
+       (setf (@ ,child prototype constructor) ,child)
+       (setf (@ ,child prototype super) ,parent)
+       ))
+
   (defmacro+ps c (&rest data)
     `(chain console (log ,@data))))
+
+(defun class-extends-fn (child parent)
+  (ps
+    (defun child ()
+      (chain this super (call this)))
+    (setf (@ child prototype)
+          (chain -Object (create (@ parent prototype))))
+    (setf (@ child prototype constructor)
+          child)
+    (setf (@ child prototype super)
+          parent)))
+
+(dojs
+ (setf (@ greeting prototype render)
+       (lambda () "" "Wooters!")))
+
+(defun react-js ()
+  (ps
+    (defvar rc (@ -react -component))
+    (class-extends greeting rc)
+    (setf (@ greeting prototype render)
+          (lambda () "" "React is working, yay."))
+    ;; (defvar Greeting
+    ;;   (chain -react
+    ;;          (create-class
+    ;;           (create
+    ;;            render (lambda ()
+    ;;                     (chain -react (create-element "div" nil "Hello, Universe")))))))
+
+    (chain -react-d-o-m (render
+                   (chain -react (create-element Greeting (create) nil))
+                   (chain document (get-element-by-id "react-stuff"))
+                   ))
+    ))
 
 (defun page-js ()
   (ps
@@ -201,17 +246,26 @@ out at the client."
     (:html
      (:head
       (:title "defjs")
-      (:script :type "text/javascript" :src "/defjs.js")
-      (:script (loader)))
+      ;; (:script
+      ;;  :src "https://cdnjs.cloudflare.com/ajax/libs/react/0.13.3/react.js")
+      )
      (:body
       (:h1 "Welcome to defjs")
       (:p "To get started, in SLIME try out some fun things like:")
       (:pre "(defjs:defjs hello-name (name) (alert (+ \"Hello \" name)))")
       (:pre "(defjs:dojs (hello-name \"Matt\"))")
+      (:div :id "react-stuff")
       (:p "At that point, you should see some results pop up here in the browser.  To
 find out how to integrate with your own page, "
           (:a :href "https://github.com/ahungry/defjs/" "read the full usage guide on Github"))
-      (:p :style "font-size:8px;" "&copy; http://ahungry.com 2014 Licensed with GPLv3")))))
+      (:p :style "font-size:8px;" "&copy; http://ahungry.com 2014 Licensed with GPLv3")
+      (:script :src "https://unpkg.com/react@16/umd/react.development.js"
+               :crossorigin)
+      (:script :src "https://unpkg.com/react-dom@16/umd/react-dom.development.js"
+               :crossorigin)
+      (:script :src "/defjs.js")
+      (:script :src "/reactjs.js")
+      (:script (loader))))))
 
 (defun main ()
   "Start webserver, websocket server"
@@ -231,5 +285,9 @@ find out how to integrate with your own page, "
   (hunchentoot:define-easy-handler (uri-js :uri "/defjs.js") ()
     (setf (hunchentoot:content-type*) "text/javascript")
     (page-js))
+
+  (hunchentoot:define-easy-handler (uri-reactjs :uri "/reactjs.js") ()
+    (setf (hunchentoot:content-type*) "text/javascript")
+    (react-js))
 
   nil)

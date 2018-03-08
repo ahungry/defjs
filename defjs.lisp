@@ -154,10 +154,6 @@ out at the client."
     (setf (@ child prototype super)
           parent)))
 
-(dojs
- (setf (@ greeting prototype render)
-       (lambda () "" "Wooters!")))
-
 (defun react-js ()
   (ps
     (defvar rc (@ -react -component))
